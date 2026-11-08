@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}Panel nacional{% endblock %}
+{% block contenido %}
+<div class="cabeza"><div><h1>Panel nacional</h1>
+{% if version %}<p class="sutil">Borrador versión {{ version.id_version }}. {{ version.comentario }}. Las jefaturas solo ven lo publicado.</p>{% endif %}</div>
+{% if version %}<a class="btn" href="/publicacion">Revisar y publicar</a>{% endif %}</div>
+{% if not version %}
+<section class="tarjeta vacio"><h2>Aún no hay planificación</h2><p>Sube un BUK para calcular el año.</p><a class="btn" href="/cargas">Cargar BUK</a></section>
+{% else %}
+<p class="nota w"><strong>Datos no incluidos en el BUK:</strong> asignaciones, licencias, permisos y vacaciones personales. Por eso el plan queda sobre el Excel de referencia. <a href="/diferencia">Ver la explicación</a></p>
+{% if incompletos %}<p class="nota b"><strong>{{ incompletos|length }} {{ 'contrato incompleto' if incompletos|length == 1 else 'contratos incompletos' }}.</strong> Tienen filas rechazadas y su plan queda bajo: {% for p, it in incompletos[:8] %}<a href="/profesional/{{ p }}/{{ it }}">{{ p }}</a>{{ ', ' if not loop.last }}{% endfor %}.</p>{% endif %}
+{% include "_tablero.html" %}
+{% endif %}
+{% endblock %}

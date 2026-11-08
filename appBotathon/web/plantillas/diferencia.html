@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titulo %}Diferencia con el Excel{% endblock %}
+{% block contenido %}
+<h1>Diferencia con el Excel</h1>
+<p class="sutil">El Excel es solo una referencia. La app calcula con el BUK y los parámetros.</p>
+{% if not version %}<section class="tarjeta vacio"><h2>Aún no hay planificación</h2><a class="btn" href="/cargas">Cargar BUK</a></section>
+{% else %}
+<div class="tiles">
+  <div class="tile"><span>Excel de referencia</span><strong>{{ ref.plan_total|miles }}</strong><small>Plan anual</small></div>
+  <div class="tile"><span>BUK y parámetros</span><strong>{{ total|miles }}</strong><small>Versión {{ version.id_version }}</small></div>
+  <div class="tile"><span>Diferencia</span><strong>{{ (total - ref.plan_total)|signo }}</strong><small>{{ ((total - ref.plan_total) / ref.plan_total)|pct }} sobre el Excel</small></div>
+</div>
+<section class="tarjeta"><h2>Por qué difiere</h2><div class="tabla-caja"><table>
+<caption>Plan anual en atenciones, con el BUK del kit y los parámetros iniciales.</caption>
+<thead><tr><th scope="col">Causa</th><th class="n" scope="col">Efecto</th><th class="n" scope="col">% de la diferencia</th></tr></thead>
+<tbody><tr><th scope="row">Excel de referencia</th><td class="n">{{ ref.plan_total|miles }}</td><td></td></tr>
+{% for c in ref.cascada %}<tr><th scope="row" class="normal">{{ c.causa }}</th><td class="n">{{ c.efecto|signo }}</td><td class="n">{{ (c.efecto / base_dif)|pct }}</td></tr>{% endfor %}</tbody>
+<tfoot><tr><th scope="row">Cálculo con BUK</th><td class="n">{{ ref.plan_buk|miles }}</td><td></td></tr></tfoot></table></div></section>
+<section class="tarjeta"><h2>Por instituto</h2><div class="tabla-caja"><table>
+<thead><tr><th scope="col">Instituto</th><th class="n" scope="col">Excel</th><th class="n" scope="col">BUK</th><th class="n" scope="col">Diferencia</th></tr></thead>
+<tbody>{% for f in filas %}<tr><th scope="row">{{ f.nombre }}</th><td class="n">{{ f.excel|miles }}</td><td class="n">{{ f.buk|miles }}</td><td class="n">{{ f.dif|pct if f.dif is not none else '—' }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endif %}
+{% endblock %}

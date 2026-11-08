@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es-CL">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block titulo %}Cada hora cuenta{% endblock %} · Cada hora cuenta</title>
+<link rel="stylesheet" href="/estaticos/estilos.css">
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+{% if demo %}<aside class="aviso-demo" aria-label="Aviso">Modo demo: el bot es simulado y nada queda guardado al cerrar la app.</aside>{% endif %}
+<header class="barra">
+  <a class="marca" href="/">Cada hora cuenta</a>
+  {% if usuario %}
+  <nav aria-label="Secciones">
+    {% if usuario.rol == 'CENTRAL' %}
+    {% for ruta, texto in [('/panel','Panel'),('/cargas','Cargas BUK'),('/parametros','Parámetros'),('/cambios','Cambios'),('/publicacion','Publicación'),('/diferencia','Diferencia'),('/historial','Historial')] %}
+    <a href="{{ ruta }}" {% if request.url.path.startswith(ruta) %}aria-current="page"{% endif %}>{{ texto }}</a>
+    {% endfor %}
+    {% else %}<a href="/mi-instituto" aria-current="page">Mi instituto</a>{% endif %}
+  </nav>
+  <form class="sesion" method="post" action="/salir">
+    <span>{{ usuario.nombre_visible }}</span>
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button class="btn sec">Salir</button>
+  </form>
+  {% endif %}
+</header>
+<main id="contenido" tabindex="-1">{% block contenido %}{% endblock %}</main>
+<div class="tip" id="tip" hidden></div>
+<script src="/estaticos/graficos.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

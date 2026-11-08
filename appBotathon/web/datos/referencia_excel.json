@@ -1,0 +1,44 @@
+{
+ "plan_total": 772356,
+ "meta_total": 692706,
+ "por_instituto": {
+  "11": 22413,
+  "12": 29062,
+  "111": 18550,
+  "21": 32318,
+  "22": 26395,
+  "61": 9387,
+  "31": 26058,
+  "131": 243277,
+  "51": 68926,
+  "41": 38019,
+  "71": 52097,
+  "81": 79145,
+  "91": 47533,
+  "101": 50301,
+  "141": 28875
+ },
+ "cascada": [
+  {
+   "causa": "Ajustes manuales del Excel y reglas sin cerrar",
+   "efecto": 477
+  },
+  {
+   "causa": "Sin asignaciones especiales (no vienen en el BUK)",
+   "efecto": 68936
+  },
+  {
+   "causa": "Sin licencias, vacaciones personales ni permisos (no vienen en el BUK)",
+   "efecto": 76114
+  },
+  {
+   "causa": "Sin colación en contrato (no viene en el BUK)",
+   "efecto": 6354
+  },
+  {
+   "causa": "Proyección de agosto a diciembre y reparto multi-instituto",
+   "efecto": 1570
+  }
+ ],
+ "plan_buk": 925807
+}

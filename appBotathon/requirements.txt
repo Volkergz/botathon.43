@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+itsdangerous
+openpyxl
+# Solo para el modo sql, en la VM:
+# pyodbc
+# Solo para las pruebas:
+# pytest
+# httpx

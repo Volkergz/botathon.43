@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block titulo %}Parámetros{% endblock %}
+{% block contenido %}
+<h1>Parámetros</h1>
+<p class="sutil">Cambia una regla, mira su impacto y aplícala. No se toca código. Versión vigente: {{ param.nombre }}.</p>
+{% if error %}<p class="nota b" role="alert">{{ error }}</p>{% endif %}
+<form method="get" action="/parametros" class="tarjeta"><label>Cargo a editar<select name="cargo">{% for c in cargos %}<option {% if c == cargo %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label><button class="btn sec">Elegir cargo</button></form>
+<form method="post" action="/parametros">
+<input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="cargo" value="{{ cargo }}">
+<section class="tarjeta"><h2>Reglas generales</h2><label class="corto">Meta de gestión (%)<input type="number" name="meta" min="1" max="100" value="{{ (param.motor.factor_meta * 100)|round|int }}" required></label></section>
+
+<section class="tarjeta"><h2>Distribución: {{ cargo }}</h2>
+{% if cargo not in en_uso %}<p class="sutil">Este cargo no aparece en el BUK cargado.</p>{% endif %}
+<div class="campos"><label>Minutos atención directa<input type="number" name="min_dir" min="5" max="480" value="{{ d.min_directa|int }}" required></label><label>Minutos atención indirecta<input type="number" name="min_ind" min="5" max="480" value="{{ d.min_indirecta|int }}" required></label></div>
+<div class="tabla-caja"><table><caption>Porcentajes por tramo. Cada fila debe sumar 100.</caption>
+<thead><tr><th scope="col">Tramo</th><th scope="col">% directo</th><th scope="col">% indirecto</th><th scope="col">% NAS</th></tr></thead>
+<tbody>{% for t in tramos %}{% set i = loop.index0 %}<tr><th scope="row">{{ t }}</th>
+{% for c, n in [('d','directo'),('i','indirecto'),('n','NAS')] %}<td><input type="number" aria-label="% {{ n }}, {{ t }}" name="t{{ i }}_{{ c }}" min="0" max="100" value="{{ (d.tramos[i][loop.index0] * 100)|round|int }}" required></td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+</section>
+
+<section class="tarjeta"><h2>Atención grupal</h2><div class="tabla-caja"><table>
+<thead><tr><th scope="col">Área</th><th scope="col">% grupal</th><th scope="col">Pacientes Santiago y Concepción</th><th scope="col">Pacientes otros institutos</th></tr></thead>
+<tbody>{% for a, g in param.motor.grupal|dictsort %}<tr><th scope="row">{{ areas.get(a, a) }}</th>
+<td><input type="number" aria-label="% grupal, {{ areas.get(a, a) }}" name="gp_{{ a }}" min="0" max="100" value="{{ (g.porcentaje * 100)|round|int }}" required></td>
+<td><input type="number" step="0.5" aria-label="Pacientes en Santiago y Concepción, {{ areas.get(a, a) }}" name="ga_{{ a }}" value="{{ g.pacientes_santiago_concepcion }}" required></td>
+<td><input type="number" step="0.5" aria-label="Pacientes en otros institutos, {{ areas.get(a, a) }}" name="go_{{ a }}" value="{{ g.pacientes_otros }}" required></td></tr>{% endfor %}</tbody></table></div></section>
+
+<section class="tarjeta"><h2>Calendario</h2><div class="tabla-caja"><table>
+<thead><tr><th scope="col">Mes</th><th scope="col">Días hábiles</th><th scope="col">Días de vacaciones generales</th></tr></thead>
+<tbody>{% for m in meses %}{% set i = loop.index0 %}<tr><th scope="row">{{ m }}</th>
+<td><input type="number" aria-label="Días hábiles de {{ m }}" name="dias_{{ i }}" min="0" max="31" value="{{ param.motor.dias_habiles_mes[i] }}" required></td>
+<td><input type="number" aria-label="Días de vacaciones de {{ m }}" name="vac_{{ i }}" min="0" max="31" value="{{ param.motor.dias_vacaciones_mes[i] }}" required></td></tr>{% endfor %}</tbody></table></div></section>
+
+<details class="tarjeta"><summary>Catálogo de asignaciones especiales</summary>
+<p>Ninguna persona tiene asignaciones cargadas, porque el BUK no trae ese dato. Sin horas significa que son variables.</p>
+<div class="tabla-caja"><table><thead><tr><th scope="col">Asignación</th><th scope="col">Horas por semana</th><th scope="col">Definida por</th></tr></thead>
+<tbody>{% for a in param.asignaciones %}<tr><th scope="row">{{ a.nombre }}</th><td><input type="text" inputmode="decimal" aria-label="Horas, {{ a.nombre }}" name="as_{{ loop.index0 }}" value="{{ a.horas if a.horas is not none else '' }}"></td><td>{{ a.definido_por }}</td></tr>{% endfor %}</tbody></table></div></details>
+
+<section class="tarjeta"><h2>Aplicar el cambio</h2>
+{% if impacto %}
+<div aria-live="polite"><div class="tiles">
+  <div class="tile"><span>Plan anual</span><strong>{{ impacto.despues.plan_tot|miles }}</strong><small>{{ (impacto.despues.plan_tot - impacto.antes.plan_tot)|signo }} respecto del borrador</small></div>
+  <div class="tile"><span>Meta anual</span><strong>{{ impacto.despues.meta_tot|miles }}</strong><small>{{ (impacto.despues.meta_tot - impacto.antes.meta_tot)|signo }} respecto del borrador</small></div>
+  <div class="tile"><span>% FOJA</span><strong>{{ impacto.despues.foja|pct }}</strong></div>
+  <div class="tile"><span>Contratos afectados</span><strong>{{ impacto.afectados|miles }}</strong></div>
+</div></div>
+{% endif %}
+<div class="campos"><label>Rige desde<select name="desde">{% for m in meses %}<option value="{{ loop.index0 }}" {% if loop.index0 == desde %}selected{% endif %}>{{ m }}</option>{% endfor %}</select></label>
+<label>Motivo (obligatorio para aplicar)<input type="text" name="motivo" value="{{ motivo }}" maxlength="500" autocomplete="off"></label></div>
+<div class="acciones"><button class="btn sec" name="accion" value="simular">Ver impacto</button> <button class="btn" name="accion" value="aplicar">Aplicar al borrador</button></div>
+</section>
+</form>
+{% endblock %}

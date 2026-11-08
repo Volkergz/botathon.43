@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block titulo %}Carga {{ carga.id_carga }}{% endblock %}
+{% block contenido %}
+<p><a href="/cargas">Volver a las cargas</a></p>
+<h1>Carga {{ carga.id_carga }}</h1>
+<p class="sutil">{{ carga.nombre_archivo|nombre_visible }} · {{ 'Reporte completo' if carga.tipo_archivo == 'COMPLETO' else 'Correcciones' }} · {{ carga.solicitado_por }} · {{ carga.fecha_solicitud|fecha }}</p>
+
+<p><span id="estado" class="et {{ rotulos[carga.estado][1] }}" role="status">{{ rotulos[carga.estado][0] }}</span></p>
+{% if carga.mensaje %}<p class="nota b" role="alert">{{ carga.mensaje }}</p>{% endif %}
+{% if plan_actualizado %}<p class="nota">La planificación ya se recalculó. <a href="/panel">Ver el panel</a> o <a href="/cambios">qué cambió</a>.</p>{% endif %}
+{% if bot_demorado %}<p class="nota w" role="alert">El bot aún no toma este archivo. Revisa que Blue Prism esté corriendo en la VM.</p>{% endif %}
+
+<section class="tarjeta">
+  <h2>Pasos de Blue Prism</h2>
+  <ul class="pasos" id="pasos" aria-live="polite" data-carga="{{ carga.id_carga }}" data-terminada="{{ '1' if carga.terminada else '0' }}">
+    {% for p in pasos %}
+    <li class="{{ 'mal' if p.estado == 'ERROR' else '' }}"><span aria-hidden="true">{{ '✕' if p.estado == 'ERROR' else '✓' }}</span>
+      {{ p.paso }}{% if p.filas is not none %} ({{ p.filas|miles }} {{ 'fila' if p.filas == 1 else 'filas' }}){% endif %}</li>
+    {% endfor %}
+    {% if not pasos %}<li class="sutil">Esperando que Blue Prism tome el archivo.</li>{% endif %}
+  </ul>
+</section>
+
+{% if carga.terminada and carga.filas_leidas is not none and carga.filas_validas is not none %}
+<div class="tiles">
+  <div class="tile"><span>Filas leídas</span><strong>{{ carga.filas_leidas|miles }}</strong></div>
+  <div class="tile"><span>Válidas</span><strong>{{ carga.filas_validas|miles }}</strong></div>
+  <div class="tile"><span>Rechazadas</span><strong>{{ carga.filas_cuarentena|miles }}</strong></div>
+  <div class="tile"><span>Advertencias</span><strong>{{ carga.filas_advertencia|miles }}</strong></div>
+  <div class="tile"><span>Nuevas</span><strong>{{ carga.filas_nuevas|miles }}</strong></div>
+  <div class="tile"><span>Con cambios</span><strong>{{ carga.filas_cambiadas|miles }}</strong></div>
+  <div class="tile"><span>Sin cambios</span><strong>{{ carga.filas_sin_cambios|miles }}</strong></div>
+  <div class="tile"><span>Eliminadas</span><strong>{{ carga.filas_eliminadas|miles }}</strong></div>
+</div>
+{% endif %}
+
+{% if rechazos %}
+<section class="tarjeta">
+  <h2>Filas rechazadas</h2>
+  <p>No se guardaron. Si ya existían, se mantiene el dato anterior.</p>
+  {% if carga.ruta_correcciones %}<p><a class="btn" href="/cargas/{{ carga.id_carga }}/correcciones">Descargar Excel de correcciones</a></p>{% endif %}
+  <div class="tabla-caja"><table>
+    <thead><tr><th scope="col">Fila</th><th scope="col">Persona</th><th scope="col">Regla</th><th scope="col">Problema</th></tr></thead>
+    <tbody>{% for r in rechazos %}<tr><th scope="row">{{ r.fila }}</th><td>{{ r.persona if r.persona is not none else 'Sin dato' }}</td><td>{{ r.reglas }}</td><td>{{ r.detalle }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+
+{% if cambios %}
+<section class="tarjeta">
+  <h2>Cambios detectados</h2>
+  <div class="tabla-caja"><table>
+    <thead><tr><th scope="col">Tipo</th><th class="n" scope="col">Cantidad</th></tr></thead>
+    <tbody>{% for c in cambios %}<tr><th scope="row">{{ rotulos_cambio.get(c.tipo, c.tipo) }}</th><td class="n">{{ c.cantidad|miles }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+
+{% if advertencias %}
+<section class="tarjeta">
+  <h2>Advertencias</h2>
+  <p>No bloquean la carga, pero conviene revisarlas.</p>
+  <div class="tabla-caja"><table>
+    <thead><tr><th scope="col">Regla</th><th scope="col">Descripción</th><th class="n" scope="col">Personas</th><th class="n" scope="col">Filas</th></tr></thead>
+    <tbody>{% for a in advertencias %}<tr><th scope="row">{{ a.regla }}</th><td>{{ a.descripcion }}</td><td class="n">{{ a.personas|miles }}</td><td class="n">{{ a.filas|miles }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}<script src="/estaticos/carga.js"></script>{% endblock %}

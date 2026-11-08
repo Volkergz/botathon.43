@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Historial{% endblock %}
+{% block contenido %}
+<h1>Historial</h1><p class="sutil">Quién hizo qué, cuándo y por qué.</p>
+<section class="tarjeta">{% if filas %}<div class="tabla-caja"><table>
+<thead><tr><th scope="col">Fecha</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">Detalle</th><th scope="col">Motivo</th></tr></thead>
+<tbody>{% for f in filas %}<tr><td>{{ f.fecha|fecha }}</td><td>{{ f.usuario }}</td><th scope="row">{{ rotulos_accion.get(f.accion, f.accion) }}</th><td>{{ f.detalle }}</td><td>{{ f.motivo or '—' }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<p>Aún no hay registros.</p>{% endif %}</section>
+<p><a href="/cierre-anio">Ir al cierre de año</a></p>
+{% endblock %}

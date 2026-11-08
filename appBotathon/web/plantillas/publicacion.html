@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block titulo %}Publicación{% endblock %}
+{% block contenido %}
+<h1>Publicación</h1>
+<p class="sutil">Cada jefatura ve solo su instituto y la última versión publicada. Un cambio nuevo no le llega hasta publicarlo.</p>
+{% if not version %}<section class="tarjeta vacio"><h2>No hay nada para publicar</h2><a class="btn" href="/cargas">Cargar BUK</a></section>
+{% else %}
+{% if incompletos %}<p class="nota w">Hay contratos incompletos. Puedes publicar, pero conviene corregirlos antes.</p>{% endif %}
+<form method="post" action="/publicacion" class="tarjeta">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<div class="tabla-caja"><table><caption>Borrador actual: versión {{ version.id_version }}</caption>
+<thead><tr><th scope="col">Publicar</th><th scope="col">Instituto</th><th class="n" scope="col">Plan</th><th class="n" scope="col">Meta</th><th scope="col">Estado</th></tr></thead>
+<tbody>{% for f in filas %}{% set p = f.publicacion %}<tr>
+<td><input type="checkbox" name="it" value="{{ f.it }}" aria-label="Publicar {{ f.nombre }}" {% if not p or p.id_version != version.id_version %}checked{% endif %}></td>
+<th scope="row">{{ f.nombre }}</th><td class="n">{{ f.plan_tot|miles }}</td><td class="n">{{ f.meta_tot|miles }}</td>
+<td>{% if not p %}<span class="et g">Sin publicar</span>{% elif p.id_version == version.id_version %}<span class="et ok">Publicado, versión {{ p.id_version }}</span>{% else %}<span class="et w">Publicada la versión {{ p.id_version }}; hay cambios</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+<button class="btn">Publicar seleccionados</button></form>
+{% endif %}
+{% endblock %}

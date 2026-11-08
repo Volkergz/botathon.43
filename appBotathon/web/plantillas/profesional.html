@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titulo %}Persona {{ r.persona_id }}{% endblock %}
+{% block contenido %}
+<p><a href="/">Volver</a></p>
+<h1>Persona {{ r.persona_id }}</h1>
+<p class="sutil">{{ r.cargo }} · {{ instituto }} · {{ area }} · {{ r.tipo_contrato }}. Promedio {{ r.promedio|miles }} horas, tramo {{ tramo }}.</p>
+{% if r.incompleto %}<p class="nota b"><strong>Incompleto:</strong> tiene filas rechazadas sin corregir, así que su plan queda bajo.</p>{% endif %}
+<p class="nota">Asignaciones y ausencias personales: sin datos, porque el BUK no las incluye.</p>
+<section class="tarjeta"><h2>Planificación por mes</h2><div class="tabla-caja"><table>
+  <caption>Versión {{ version.id_version }}{% if previo %}, comparada con la anterior{% endif %}</caption>
+  <thead><tr><th scope="col">Mes</th><th class="n" scope="col">Horas</th><th class="n" scope="col">Semanas</th><th class="n" scope="col">Plan directa</th><th class="n" scope="col">Plan total</th><th class="n" scope="col">Meta total</th>{% if previo %}<th class="n" scope="col">Meta anterior</th>{% endif %}</tr></thead>
+  <tbody>{% for m in meses %}{% set i = loop.index0 %}<tr {% if previo and previo.meta_total[i] != r.meta_total[i] %}class="resalta"{% endif %}><th scope="row">{{ m }}</th><td class="n">{{ r.horas[i]|dec }}</td><td class="n">{{ r.semanas[i]|dec }}</td><td class="n">{{ r.plan_directa[i]|miles }}</td><td class="n">{{ r.plan_total[i]|miles }}</td><td class="n">{{ r.meta_total[i]|miles }}</td>{% if previo %}<td class="n">{{ previo.meta_total[i]|miles }}{% if previo.meta_total[i] != r.meta_total[i] %} <span class="et w">Cambió</span>{% endif %}</td>{% endif %}</tr>{% endfor %}</tbody>
+  <tfoot><tr><th scope="row">Año</th><td></td><td class="n">{{ (r.semanas|sum)|dec }}</td><td class="n">{{ (r.plan_directa|sum)|miles }}</td><td class="n">{{ (r.plan_total|sum)|miles }}</td><td class="n">{{ (r.meta_total|sum)|miles }}</td>{% if previo %}<td class="n">{{ (previo.meta_total|sum)|miles }}</td>{% endif %}</tr></tfoot>
+</table></div></section>
+{% endblock %}

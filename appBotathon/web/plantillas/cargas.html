@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}Cargas BUK{% endblock %}
+{% block contenido %}
+<h1>Cargas BUK</h1>
+<p class="sutil">Sube el reporte. Blue Prism lo valida, y las filas con error vuelven en un Excel para corregir.</p>
+
+<section class="tarjeta">
+  <h2>Subir archivo</h2>
+  {% if error %}<p class="nota b" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/cargas" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Archivo Excel (.xlsx)
+      <input type="file" name="archivo" accept=".xlsx" required>
+    </label>
+    <fieldset>
+      <legend>Tipo de archivo</legend>
+      <label class="radio"><input type="radio" name="tipo" value="COMPLETO" checked>
+        <span><strong>Reporte completo.</strong> Trae todos los contratos. Quien no aparezca se marca como baja.</span></label>
+      <label class="radio"><input type="radio" name="tipo" value="CORRECCIONES">
+        <span><strong>Correcciones.</strong> Solo actualiza lo que trae. Nunca genera bajas.</span></label>
+    </fieldset>
+    <button class="btn">Subir archivo</button>
+  </form>
+</section>
+
+<section class="tarjeta">
+  <h2>Últimas cargas</h2>
+  {% if cargas %}
+  <div class="tabla-caja"><table>
+    <thead><tr><th scope="col">N°</th><th scope="col">Archivo</th><th scope="col">Tipo</th><th scope="col">Subido por</th>
+      <th scope="col">Fecha</th><th scope="col">Estado</th><th class="n" scope="col">Válidas</th><th class="n" scope="col">Rechazadas</th></tr></thead>
+    <tbody>
+    {% for c in cargas %}
+      <tr>
+        <th scope="row"><a href="/cargas/{{ c.id_carga }}">{{ c.id_carga }}</a></th>
+        <td>{{ c.nombre_archivo|nombre_visible }}</td>
+        <td>{{ 'Completo' if c.tipo_archivo == 'COMPLETO' else 'Correcciones' }}</td>
+        <td>{{ c.solicitado_por }}</td>
+        <td>{{ c.fecha_solicitud|fecha }}</td>
+        <td><span class="et {{ rotulos[c.estado][1] }}">{{ rotulos[c.estado][0] }}</span></td>
+        <td class="n">{{ c.filas_validas|miles }}</td>
+        <td class="n">{{ c.filas_cuarentena|miles }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p>Aún no hay cargas.</p>{% endif %}
+</section>
+{% endblock %}

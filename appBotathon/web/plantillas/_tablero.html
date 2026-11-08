@@ -1,0 +1,68 @@
+{% macro opcion(valor, actual, texto) %}<option value="{{ valor }}" {% if valor|string == actual|string %}selected{% endif %}>{{ texto }}</option>{% endmacro %}
+<form class="filtros" method="get" action="{{ ruta_base }}">
+  {% if ruta_base == '/panel' %}
+  <label>Instituto<select name="it"><option value="">Todos</option>{% for it, n in nombres|dictsort(by='value') %}{{ opcion(it, filtros.it, n) }}{% endfor %}</select></label>
+  {% endif %}
+  <label>Área<select name="area"><option value="">Todas</option>{% for c, n in areas|dictsort(by='value') %}{{ opcion(c, filtros.area, n) }}{% endfor %}</select></label>
+  <label>Cargo<select name="cargo"><option value="">Todos</option>{% for c in cargos %}{{ opcion(c, filtros.cargo, c) }}{% endfor %}</select></label>
+  <label>Mes<select name="mes"><option value="">Año completo</option>{% for m in meses %}{{ opcion(loop.index0, filtros.mes, m) }}{% endfor %}</select></label>
+  <label>Tipo de atención<select name="tipo">{{ opcion('tot', filtros.tipo, 'Directa e indirecta') }}{{ opcion('dir', filtros.tipo, 'Directa') }}{{ opcion('ind', filtros.tipo, 'Indirecta') }}</select></label>
+  <label>Persona<input type="search" name="persona" inputmode="numeric" value="{{ filtros.persona }}" placeholder="PersonaId"></label>
+  <div class="acciones"><button class="btn">Aplicar filtros</button> <a href="{{ ruta_base }}">Limpiar</a></div>
+</form>
+
+{% set r = resumen %}
+{% if not total_personas %}
+<section class="tarjeta vacio"><h2>Sin resultados</h2><p>Prueba quitando algún filtro.</p></section>
+{% else %}
+<div class="tiles">
+  <div class="tile"><span>Profesionales</span><strong>{{ r.personas|miles }}</strong></div>
+  <div class="tile"><span>Horas semanales</span><strong>{{ r.horas|miles }}</strong><small>{{ meses[filtros.mes] if filtros.mes is not none else 'Diciembre' }}</small></div>
+  <div class="tile"><span>Atenciones planificadas</span><strong>{{ (r.plan_dir if filtros.tipo == 'dir' else r.plan_ind if filtros.tipo == 'ind' else r.plan_tot)|miles }}</strong></div>
+  <div class="tile"><span>Meta de gestión</span><strong>{{ (r.meta_dir if filtros.tipo == 'dir' else (r.meta_tot - r.meta_dir) if filtros.tipo == 'ind' else r.meta_tot)|miles }}</strong></div>
+  <div class="tile"><span>% FOJA</span><strong>{{ r.foja|pct }}</strong><small>Horas directas ÷ contratadas</small></div>
+</div>
+
+<div class="dos {{ 'una' if filas_inst|length == 1 }}">
+  {% if filas_inst|length > 1 %}
+  <section class="tarjeta"><h2>Atenciones por instituto</h2>
+    {% for b in barras %}
+    <div class="barra-h" data-tip="{{ b.nombre }}: {{ b.v|miles }}"><span>{{ b.nombre }}</span><div class="pista"><div class="b" style="width:{{ (b.v / tope_barras * 76)|round(1) }}%"></div><span class="v">{{ b.v|miles }}</span></div></div>
+    {% endfor %}
+  </section>
+  {% endif %}
+  <section class="tarjeta"><h2>Atenciones por mes</h2>
+    <div class="leyenda"><span><i class="c1"></i>Directa</span><span><i class="c2"></i>Indirecta</span></div>
+    <div class="cols" role="img" aria-label="Atenciones por mes. El detalle está en la tabla de abajo.">
+      {% for m in mensual %}
+      <div class="col" data-tip="{{ meses[loop.index0] }}: {{ m.dir|miles }} directas y {{ m.ind|miles }} indirectas">
+        <div class="seg c2" style="height:{{ (m.ind / tope_mes * 100)|round(1) }}%"></div><div class="seg c1" style="height:{{ (m.dir / tope_mes * 100)|round(1) }}%"></div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="ejes" aria-hidden="true">{% for m in meses %}<span>{{ m }}</span>{% endfor %}</div>
+    <details><summary>Ver como tabla</summary><div class="tabla-caja"><table>
+      <caption>Atenciones planificadas por mes</caption>
+      <thead><tr><th scope="col">Mes</th><th class="n" scope="col">Directa</th><th class="n" scope="col">Indirecta</th><th class="n" scope="col">Total</th></tr></thead>
+      <tbody>{% for m in mensual %}<tr><th scope="row">{{ meses[loop.index0] }}</th><td class="n">{{ m.dir|miles }}</td><td class="n">{{ m.ind|miles }}</td><td class="n">{{ (m.dir + m.ind)|miles }}</td></tr>{% endfor %}</tbody>
+    </table></div></details>
+  </section>
+</div>
+
+{% if filas_inst|length > 1 %}
+<section class="tarjeta"><h2>Resumen por instituto</h2><div class="tabla-caja"><table>
+  <caption>Horas por semana y atenciones {{ 'anuales' if filtros.mes is none else 'de ' ~ meses[filtros.mes] }}.</caption>
+  <thead><tr><th scope="col">Instituto</th><th class="n" scope="col">Horas</th><th class="n" scope="col">Directa h</th><th class="n" scope="col">Indirecta h</th><th class="n" scope="col">NAS h</th><th class="n" scope="col">At. directa</th><th class="n" scope="col">At. indirecta</th><th class="n" scope="col">Total</th><th class="n" scope="col">Meta</th><th class="n" scope="col">% FOJA</th></tr></thead>
+  <tbody>{% for x in filas_inst %}<tr><th scope="row"><a href="{{ ruta_base }}?it={{ x.it }}">{{ x.nombre }}</a></th><td class="n">{{ x.horas|miles }}</td><td class="n">{{ x.h_dir|miles }}</td><td class="n">{{ x.h_ind|miles }}</td><td class="n">{{ x.h_nas|miles }}</td><td class="n">{{ x.plan_dir|miles }}</td><td class="n">{{ x.plan_ind|miles }}</td><td class="n">{{ x.plan_tot|miles }}</td><td class="n">{{ x.meta_tot|miles }}</td><td class="n">{{ x.foja|pct }}</td></tr>{% endfor %}</tbody>
+  <tfoot><tr><th scope="row">Total</th><td class="n">{{ r.horas|miles }}</td><td class="n">{{ r.h_dir|miles }}</td><td class="n">{{ r.h_ind|miles }}</td><td class="n">{{ r.h_nas|miles }}</td><td class="n">{{ r.plan_dir|miles }}</td><td class="n">{{ r.plan_ind|miles }}</td><td class="n">{{ r.plan_tot|miles }}</td><td class="n">{{ r.meta_tot|miles }}</td><td class="n">{{ r.foja|pct }}</td></tr></tfoot>
+</table></div></section>
+{% endif %}
+
+{% if ver_personas %}
+<section class="tarjeta"><h2>Profesionales</h2><div class="tabla-caja"><table>
+  <caption>{{ total_personas|miles }} contratos{% if total_personas > 200 %}; se muestran los primeros 200{% endif %}.</caption>
+  <thead><tr><th scope="col">Persona</th><th scope="col">Instituto</th><th scope="col">Cargo</th><th scope="col">Área</th><th class="n" scope="col">Plan</th><th class="n" scope="col">Meta</th><th scope="col">Estado</th></tr></thead>
+  <tbody>{% for p in personas %}<tr><th scope="row"><a href="/profesional/{{ p.persona_id }}/{{ p.it }}">{{ p.persona_id }}</a></th><td>{{ nombres.get(p.it, p.it) }}</td><td>{{ p.cargo }}</td><td>{{ areas.get(p.cod_esp, p.cod_esp) }}</td><td class="n">{{ p.plan_total|sum|miles }}</td><td class="n">{{ p.meta_total|sum|miles }}</td><td>{% if p.incompleto %}<span class="et b">Incompleto</span>{% else %}<span class="et ok">Completo</span>{% endif %}</td></tr>{% endfor %}</tbody>
+</table></div></section>
+{% endif %}
+{% endif %}

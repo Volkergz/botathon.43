@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block titulo %}{{ instituto }}{% endblock %}
+{% block contenido %}
+<h1>{{ instituto }}</h1>
+{% if publicacion %}
+<p class="sutil">Versión {{ publicacion.id_version }}, publicada el {{ publicacion.fecha|fecha }}.</p>
+{% include "_tablero.html" %}
+{% else %}
+<section class="tarjeta vacio">
+  <h2>La planificación aún no está publicada</h2>
+  <p>Planificación central debe publicarla para que puedas verla.</p>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block titulo %}Cierre de año{% endblock %}
+{% block contenido %}
+<h1>Cierre de año</h1>
+{% if error %}<p class="nota b" role="alert">{{ error }}</p>{% endif %}
+{% if not version %}<section class="tarjeta vacio"><h2>No hay un año abierto con datos</h2><a class="btn" href="/cargas">Cargar BUK</a></section>
+{% else %}
+{% if atrasado %}<p class="nota w" role="alert"><strong>Los datos son del año {{ anio }}.</strong> Conviene cerrarlo antes de subir el BUK del año nuevo.</p>{% endif %}
+<section class="tarjeta"><h2>Cerrar el año {{ anio }}</h2>
+<p>La tabla de trabajo quedará vacía y las jefaturas dejarán de ver lo publicado. Los archivos cargados y las versiones siguen guardados en el historial.</p>
+<form method="post" action="/cierre-anio"><input type="hidden" name="csrf" value="{{ csrf }}">
+<label>Para confirmar, escribe CERRAR {{ anio }}<input type="text" name="confirmacion" autocomplete="off" required></label>
+<label>Motivo<input type="text" name="motivo" maxlength="500" autocomplete="off" required></label>
+<button class="btn peligro">Cerrar año</button></form></section>
+{% endif %}
+{% endblock %}

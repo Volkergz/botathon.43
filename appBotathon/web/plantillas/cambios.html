@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titulo %}Cambios{% endblock %}
+{% block contenido %}
+<h1>Cambios entre versiones</h1>
+<p class="sutil">Cada cambio rige desde su fecha: los meses anteriores no se tocan.</p>
+{% if not version %}<section class="tarjeta vacio"><h2>Aún no hay planificación</h2><a class="btn" href="/cargas">Cargar BUK</a></section>
+{% elif not previa %}<section class="tarjeta vacio"><h2>Todavía hay una sola versión</h2><p>Sube otro reporte o cambia un parámetro para comparar.</p></section>
+{% else %}
+<p>Versión {{ version.id_version }} comparada con la versión {{ previa.id_version }}. {{ version.comentario }}.</p>
+<div class="tiles">
+  <div class="tile"><span>Contratos con cambios</span><strong>{{ total|miles }}</strong></div>
+  <div class="tile"><span>Meta antes</span><strong>{{ suma_antes|miles }}</strong></div>
+  <div class="tile"><span>Meta ahora</span><strong>{{ suma_despues|miles }}</strong></div>
+  <div class="tile"><span>Diferencia</span><strong>{{ (suma_despues - suma_antes)|signo }}</strong></div>
+</div>
+{% if filas %}
+<section class="tarjeta"><h2>Contratos afectados</h2><div class="tabla-caja"><table>
+  <caption>Meta anual. Los 200 cambios más grandes.</caption>
+  <thead><tr><th scope="col">Persona</th><th scope="col">Instituto</th><th scope="col">Cargo</th><th scope="col">Tipo</th><th scope="col">Rige desde</th><th class="n" scope="col">Meta antes</th><th class="n" scope="col">Meta ahora</th><th class="n" scope="col">Diferencia</th></tr></thead>
+  <tbody>{% for f in filas %}<tr><th scope="row">{% if f.tipo != 'Eliminada' %}<a href="/profesional/{{ f.persona }}/{{ f.it }}">{{ f.persona }}</a>{% else %}{{ f.persona }}{% endif %}</th><td>{{ nombres.get(f.it, f.it) }}</td><td>{{ f.cargo }}</td><td>{{ f.tipo }}</td><td>{{ meses[f.desde] }}</td><td class="n">{{ f.antes|miles }}</td><td class="n">{{ f.despues|miles }}</td><td class="n">{{ (f.despues - f.antes)|signo }}</td></tr>{% endfor %}</tbody>
+</table></div></section>
+{% endif %}
+{% endif %}
+{% endblock %}
